@@ -1,0 +1,46 @@
+{
+  "Version": 1,
+  "Hash": "yZIiHkk4I+anN2vW/yrvAf+B4IGvTP0T6xCg2NkR250=",
+  "Source": "Minesweeper",
+  "BasePath": "_content/Minesweeper",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [
+    {
+      "Identity": "/Users/mimi/Projects/Minesweeper/Minesweeper/obj/Debug/net6.0/scopedcss/bundle/Minesweeper.styles.css",
+      "SourceId": "Minesweeper",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/mimi/Projects/Minesweeper/Minesweeper/obj/Debug/net6.0/scopedcss/bundle/",
+      "BasePath": "_content/Minesweeper",
+      "RelativePath": "Minesweeper.styles.css",
+      "AssetKind": "All",
+      "AssetMode": "CurrentProject",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "ScopedCss",
+      "AssetTraitValue": "ApplicationBundle",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "/Users/mimi/Projects/Minesweeper/Minesweeper/obj/Debug/net6.0/scopedcss/bundle/Minesweeper.styles.css"
+    },
+    {
+      "Identity": "/Users/mimi/Projects/Minesweeper/Minesweeper/obj/Debug/net6.0/scopedcss/projectbundle/Minesweeper.bundle.scp.css",
+      "SourceId": "Minesweeper",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/mimi/Projects/Minesweeper/Minesweeper/obj/Debug/net6.0/scopedcss/projectbundle/",
+      "BasePath": "_content/Minesweeper",
+      "RelativePath": "Minesweeper.bundle.scp.css",
+      "AssetKind": "All",
+      "AssetMode": "Reference",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "ScopedCss",
+      "AssetTraitValue": "ProjectBundle",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "/Users/mimi/Projects/Minesweeper/Minesweeper/obj/Debug/net6.0/scopedcss/projectbundle/Minesweeper.bundle.scp.css"
+    }
+  ]
+}

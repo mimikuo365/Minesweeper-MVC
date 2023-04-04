@@ -1,0 +1,73 @@
+﻿@model Minesweeper.Controllers.HomeController
+
+@{
+    ViewData["Title"] = "Mi's Minesweeper Game";
+}
+
+<div class="text-center">
+    @{
+        for (int i = 0; i < Model.Minesweeper.Board.GetLength(0); i++)
+        {
+            <div class="row">
+                @for (int j = 0; j < Model.Minesweeper.Board.GetLength(1); j++)
+                {
+                    string value = (i * 12 + j).ToString();
+                    <button class="col-1 btn btn-outline-primary unopen cell" value=@value>@Model.Minesweeper.Board[i, j].Value</button>
+                }
+            </div>
+        }
+    }
+</div>
+
+@section scripts{
+    <script>
+        const NumberOfColumn = 12;
+
+        class Minesweeper{
+            constructor() {
+                this.unopenCell = $(".unopen");
+                this.openedCell = $(".opened");
+                this.cell = $(".cell");
+
+            }
+
+            init() {
+                let self = this;
+
+                this.cell.on("click", function () {
+                    self.updateCell(this);
+                });
+            }
+
+            updateCell(buttonPointer) {
+                let self = this;
+
+                $.ajax({
+                    url: "@Url.Action("UpdateTable", "Home")",
+                    type: "GET",
+                    data: { "data": $(buttonPointer).val() },
+                    beforeSend: function () {
+                        debugger;
+                    },
+                    success: function (val) {
+                        $(buttonPointer).text(val);
+                        $(buttonPointer).removeClass("unopen btn-outline-primary unopen");
+                        $(buttonPointer).addClass("opened btn-secondary");
+                    },
+                    complete: function () {
+
+                    },
+                    error: function (e) {
+
+                    }
+                });
+            }
+        }
+    
+        $(document).ready(function () {
+            let minesweeper = new Minesweeper();
+            minesweeper.init();
+        })
+    </script>
+}
+
