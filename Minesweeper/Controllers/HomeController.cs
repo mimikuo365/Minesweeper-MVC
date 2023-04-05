@@ -46,35 +46,20 @@ public class HomeController : Controller
 
     //TODO: Create a function to randomly generate mine in a game
     //public
-
     public string UpdateTable(string data)
     {
         int row = Int32.Parse(data) / NumOfColumn;
         int col = Int32.Parse(data) % NumOfColumn;
 
-        if (this.Minesweeper.Board[row, col].IsOpened == false)
-        {
-            ClickOnCell(row, col);
-        }
+        ClickOnCell(row, col);
         return this.Minesweeper.Board[row, col].Value == "0" ? "" : this.Minesweeper.Board[row, col].Value;
-    }
-
-    private void ClickOnCell(int row, int col)
-    {
-        this.Minesweeper.Board[row, col].IsOpened = true;
-        int numOfnearbyMine = CheckNearbyForMine(row, col);
-        if (numOfnearbyMine == 0)
-        {
-            //TODO: Create a function to recursively open nearby not-mine cell
-            //OpenNearbyCell();
-        }
-        this.Minesweeper.Board[row, col].Value = numOfnearbyMine.ToString();
     }
 
     private int CheckNearbyForMine(int row, int col)
     {
+        Console.WriteLine(row + " " + col);
         int[,] surroundings = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
-        int numOfnearbyMine = 0;
+        int numOfNearbyMine = 0;
         for (int i = 0; i < surroundings.GetLength(0); i++)
         {
             int neighRow = row + surroundings[i, 0];
@@ -83,25 +68,30 @@ public class HomeController : Controller
             if (neighRow >= 0 && neighRow < NumOfRow &&
                 neighCol >= 0 && neighCol < NumOfColumn &&
                 this.Minesweeper.Board[neighRow, neighCol].IsMine)
-                numOfnearbyMine++;
+                numOfNearbyMine++;
         }
-        return numOfnearbyMine;
+        return numOfNearbyMine;
     }
 
-    private void OpenNearbyCell(int row, int col)
+    private void ClickOnCell(int row, int col)
     {
+        if (row < 0 || row >= NumOfRow || col < 0 || col >= NumOfColumn ||
+            this.Minesweeper.Board[row, col].IsOpened == true)
+            return;
+
+        int numOfNearbyMine = CheckNearbyForMine(row, col);
         this.Minesweeper.Board[row, col].IsOpened = true;
+        this.Minesweeper.Board[row, col].Value = numOfNearbyMine.ToString();
 
-        int[,] surroundings = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
-        for (int i = 0; i < surroundings.GetLength(0); i++)
+        if (numOfNearbyMine == 0)
         {
-            int neighRow = row + surroundings[i, 0];
-            int neighCol = col + surroundings[i, 1];
-
-            if (neighRow >= 0 && neighRow < NumOfRow &&
-                neighCol >= 0 && neighCol < NumOfColumn &&
-                !this.Minesweeper.Board[neighRow, neighCol].IsMine)
-                OpenNearbyCell(neighRow, neighCol);
+            int[,] surroundings = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
+            for (int i = 0; i < surroundings.GetLength(0); i++)
+            {
+                int neighRow = row + surroundings[i, 0];
+                int neighCol = col + surroundings[i, 1];
+                ClickOnCell(neighRow, neighCol);
+            }
         }
     }
 }
