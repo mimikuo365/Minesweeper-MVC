@@ -12,7 +12,7 @@
                 @for (int j = 0; j < Model.Minesweeper.Board.GetLength(1); j++)
                 {
                     string value = (i * 12 + j).ToString();
-                    <button class="col-1 btn btn-outline-primary unopen cell" value=@value>@Model.Minesweeper.Board[i, j].Value</button>
+                    <button class="col-1 btn btn-outline-primary unopen cell" id=@value value=@value>@Model.Minesweeper.Board[i, j].Value</button>
                 }
             </div>
         }
@@ -22,6 +22,7 @@
 @section scripts{
     <script>
         const NumberOfColumn = 12;
+        const NumberOfRow = 17;
 
         class Minesweeper{
             constructor() {
@@ -39,6 +40,25 @@
                 });
             }
 
+            renewBoard(impactedCellList, mineValues) {
+                for (var i = 0; i < impactedCellList.length; i++) {
+                    let id = "#" + impactedCellList[i];
+                    if (mineValues[i] != "0")
+                        $(id).text(mineValues[i]);
+                    $(id)[0].disabled = true;
+                    $(id).removeClass("unopen btn-outline-primary");
+                    $(id).addClass("opened btn-secondary");
+                }
+            }
+
+            makeAllButtonUnclickable() {
+                for (var i = 0; i < this.cell.length; i++) {
+                    this.cell[i].disabled = true;
+                }
+                this.cell.removeClass("btn-outline-primary btn-secondary");
+                this.cell.addClass("btn-danger");
+            }
+
             updateCell(buttonPointer) {
                 let self = this;
 
@@ -49,10 +69,15 @@
                     beforeSend: function () {
                         debugger;
                     },
-                    success: function (val) {
-                        $(buttonPointer).text(val);
-                        $(buttonPointer).removeClass("unopen btn-outline-primary unopen");
-                        $(buttonPointer).addClass("opened btn-secondary");
+                    success: function (data) {
+                        let json = JSON.parse(data);
+                        if (json.Status) {
+                            //TODO: End the game
+                            self.makeAllButtonUnclickable();
+                        }
+                        else {
+                            self.renewBoard(json.ImpactedCells, json.CorrespondingMines);
+                        }
                     },
                     complete: function () {
 
@@ -63,7 +88,7 @@
                 });
             }
         }
-    
+
         $(document).ready(function () {
             let minesweeper = new Minesweeper();
             minesweeper.init();

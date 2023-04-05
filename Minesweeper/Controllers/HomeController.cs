@@ -1,13 +1,17 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Minesweeper.Models;
+using Newtonsoft.Json;
 
 namespace Minesweeper.Controllers;
 
 public class HomeController : Controller
 {
     public Game Minesweeper;
+    public Result ClickedResult;
+
     const int NumOfColumn = 12;
     const int NumOfRow = 17;
 
@@ -48,11 +52,19 @@ public class HomeController : Controller
     //public
     public string UpdateTable(string data)
     {
-        int row = Int32.Parse(data) / NumOfColumn;
-        int col = Int32.Parse(data) % NumOfColumn;
+        List<int> impactedCell = new List<int>();
+        List<string> correspondingMines = new List<string>();
+        int index = int.Parse(data);
+        ClickOnCell(index, ref impactedCell, ref correspondingMines);
 
-        ClickOnCell(row, col);
-        return this.Minesweeper.Board[row, col].Value == "0" ? "" : this.Minesweeper.Board[row, col].Value;
+        this.ClickedResult = new Result()
+        {
+            ImpactedCells = impactedCell,
+            CurrentCellValue = this.Minesweeper.Board[index / NumOfColumn, index % NumOfColumn].Value,
+            Status = this.Minesweeper.Board[index / NumOfColumn, index % NumOfColumn].IsMine,
+            CorrespondingMines = correspondingMines
+        };
+        return JsonConvert.SerializeObject(this.ClickedResult);
     }
 
     private int CheckNearbyForMine(int row, int col)
@@ -73,8 +85,11 @@ public class HomeController : Controller
         return numOfNearbyMine;
     }
 
-    private void ClickOnCell(int row, int col)
+    private void ClickOnCell(int index, ref List<int> impactedCell, ref List<string> correspondingMines)
     {
+        int row = index / NumOfColumn;
+        int col = index % NumOfColumn;
+
         if (row < 0 || row >= NumOfRow || col < 0 || col >= NumOfColumn ||
             this.Minesweeper.Board[row, col].IsOpened == true)
             return;
@@ -82,6 +97,8 @@ public class HomeController : Controller
         int numOfNearbyMine = CheckNearbyForMine(row, col);
         this.Minesweeper.Board[row, col].IsOpened = true;
         this.Minesweeper.Board[row, col].Value = numOfNearbyMine.ToString();
+        impactedCell.Add(index);
+        correspondingMines.Add(this.Minesweeper.Board[row, col].Value);
 
         if (numOfNearbyMine == 0)
         {
@@ -90,7 +107,8 @@ public class HomeController : Controller
             {
                 int neighRow = row + surroundings[i, 0];
                 int neighCol = col + surroundings[i, 1];
-                ClickOnCell(neighRow, neighCol);
+                int newIndex = neighRow * NumOfColumn + neighCol;
+                ClickOnCell(newIndex, ref impactedCell, ref correspondingMines);
             }
         }
     }
