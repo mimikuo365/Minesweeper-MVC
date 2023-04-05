@@ -9,7 +9,6 @@ namespace Minesweeper.Controllers;
 
 public class HomeController : Controller
 {
-    //public Game Minesweeper;
     public Cell[,] Board { get; set; }
     static public List<string> Mines = GenerateMine();
     public Result ClickedResult;
@@ -67,7 +66,6 @@ public class HomeController : Controller
                 Mines.Add(mineIndex);
             }
         }
-        //return new List<string> {"1", "10", "13", "14", "15", "93"};
         return Mines;
     }
 
