@@ -9,7 +9,9 @@ namespace Minesweeper.Controllers;
 
 public class HomeController : Controller
 {
-    public Game Minesweeper;
+    //public Game Minesweeper;
+    public Cell[,] Board { get; set; }
+    static public List<string> Mines = GenerateMine();
     public Result ClickedResult;
 
     const int NumOfColumn = 12;
@@ -17,24 +19,24 @@ public class HomeController : Controller
 
     public HomeController()
     {
-        this.Minesweeper = new Game
-        {
-            Board = new Cell[NumOfRow, NumOfColumn],
-            IsFinished = false
-        };
+        this.Board = new Cell[NumOfRow, NumOfColumn];
 
-        for (int i = 0; i < this.Minesweeper.Board.GetLength(0); i++)
-            for(int j = 0; j < this.Minesweeper.Board.GetLength(1); j++)
+        for (int i = 0; i < this.Board.GetLength(0); i++)
+            for (int j = 0; j < this.Board.GetLength(1); j++)
             {
-                this.Minesweeper.Board[i, j] = new Cell()
+                this.Board[i, j] = new Cell()
                 {
                     Value = "O",
                     IsMine = false,
                     IsOpened = false
                 };
             }
-        for (int i = 0; i < this.Minesweeper.Board.GetLength(1); i++)
-            this.Minesweeper.Board[1, i].IsMine = true;
+
+        for (int i = 0; i < Mines.Count; i++)
+        {
+            int index = Int32.Parse(Mines[i]);
+            this.Board[index / NumOfColumn, index % NumOfColumn].IsMine = true;
+        }
     }
 
     public IActionResult Index()
@@ -48,21 +50,50 @@ public class HomeController : Controller
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
-    //TODO: Create a function to randomly generate mine in a game
-    //public
-    public string UpdateTable(string data)
+    static public List<string> GenerateMine() {
+        List<string> Mines = new List<string>();
+        int counter = 40;
+
+        while (counter > 0)
+        {
+            Random rnd = new Random();
+            int mineRow = rnd.Next(NumOfRow);
+            int mineCol = rnd.Next(NumOfColumn);
+            string mineIndex = (mineRow * NumOfColumn + mineCol).ToString();
+
+            if (!Mines.Contains(mineIndex))
+            {
+                counter--;
+                Mines.Add(mineIndex);
+            }
+        }
+        //return new List<string> {"1", "10", "13", "14", "15", "93"};
+        return Mines;
+    }
+
+    public string UpdateTable(string data, bool isFirst)
     {
-        List<int> impactedCell = new List<int>();
+        List<string> impactedCell = new List<string>();
         List<string> correspondingMines = new List<string>();
         int index = int.Parse(data);
+        int row = index / NumOfColumn;
+        int col = index % NumOfColumn;
+
+        if (isFirst)
+        {
+            this.Board[row, col].IsMine = false;
+            Mines.Remove(data);
+        }
+
         ClickOnCell(index, ref impactedCell, ref correspondingMines);
 
         this.ClickedResult = new Result()
         {
             ImpactedCells = impactedCell,
-            CurrentCellValue = this.Minesweeper.Board[index / NumOfColumn, index % NumOfColumn].Value,
-            Status = this.Minesweeper.Board[index / NumOfColumn, index % NumOfColumn].IsMine,
-            CorrespondingMines = correspondingMines
+            CurrentCellValue = this.Board[row, col].Value,
+            Status = this.Board[row, col].IsMine,
+            CorrespondingMines = correspondingMines,
+            SelectedMines = Mines
         };
         return JsonConvert.SerializeObject(this.ClickedResult);
     }
@@ -79,36 +110,38 @@ public class HomeController : Controller
 
             if (neighRow >= 0 && neighRow < NumOfRow &&
                 neighCol >= 0 && neighCol < NumOfColumn &&
-                this.Minesweeper.Board[neighRow, neighCol].IsMine)
+                this.Board[neighRow, neighCol].IsMine)
                 numOfNearbyMine++;
         }
         return numOfNearbyMine;
     }
 
-    private void ClickOnCell(int index, ref List<int> impactedCell, ref List<string> correspondingMines)
+    private void ClickOnCell(int index, ref List<string> impactedCell, ref List<string> correspondingMines)
     {
         int row = index / NumOfColumn;
         int col = index % NumOfColumn;
-
-        if (row < 0 || row >= NumOfRow || col < 0 || col >= NumOfColumn ||
-            this.Minesweeper.Board[row, col].IsOpened == true)
-            return;
-
         int numOfNearbyMine = CheckNearbyForMine(row, col);
-        this.Minesweeper.Board[row, col].IsOpened = true;
-        this.Minesweeper.Board[row, col].Value = numOfNearbyMine.ToString();
-        impactedCell.Add(index);
-        correspondingMines.Add(this.Minesweeper.Board[row, col].Value);
 
-        if (numOfNearbyMine == 0)
+        if (!this.Board[row,col].IsMine)
         {
-            int[,] surroundings = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
-            for (int i = 0; i < surroundings.GetLength(0); i++)
+            this.Board[row, col].IsOpened = true;
+            this.Board[row, col].Value = numOfNearbyMine.ToString();
+            impactedCell.Add(index.ToString());
+            correspondingMines.Add(this.Board[row, col].Value);
+            if (numOfNearbyMine == 0)
             {
-                int neighRow = row + surroundings[i, 0];
-                int neighCol = col + surroundings[i, 1];
-                int newIndex = neighRow * NumOfColumn + neighCol;
-                ClickOnCell(newIndex, ref impactedCell, ref correspondingMines);
+                int[,] surroundings = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
+                for (int i = 0; i < surroundings.GetLength(0); i++)
+                {
+                    int neighRow = row + surroundings[i, 0];
+                    int neighCol = col + surroundings[i, 1];
+                    int newIndex = neighRow * NumOfColumn + neighCol;
+
+                    if (neighRow < 0 || neighRow >= NumOfRow || neighCol < 0 || neighCol >= NumOfColumn ||
+                        this.Board[neighRow, neighCol].IsOpened)
+                        continue;
+                    ClickOnCell(newIndex, ref impactedCell, ref correspondingMines);
+                }
             }
         }
     }

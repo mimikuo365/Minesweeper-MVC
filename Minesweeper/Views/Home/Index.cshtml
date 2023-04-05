@@ -6,17 +6,20 @@
 
 <div class="text-center">
     @{
-        for (int i = 0; i < Model.Minesweeper.Board.GetLength(0); i++)
+        for (int i = 0; i < Model.Board.GetLength(0); i++)
         {
             <div class="row">
-                @for (int j = 0; j < Model.Minesweeper.Board.GetLength(1); j++)
+                @for (int j = 0; j < Model.Board.GetLength(1); j++)
                 {
                     string value = (i * 12 + j).ToString();
-                    <button class="col-1 btn btn-outline-primary unopen cell" id=@value value=@value>@Model.Minesweeper.Board[i, j].Value</button>
+                    <button class="col-1 btn btn-outline-primary cell" id=@value value=@value>@Model.Board[i, j].Value</button>
                 }
             </div>
         }
     }
+</div>
+<div class="row">
+    <button class="btn btn-warning" id="restart-game">Restart</button>
 </div>
 
 @section scripts{
@@ -26,10 +29,9 @@
 
         class Minesweeper{
             constructor() {
-                this.unopenCell = $(".unopen");
-                this.openedCell = $(".opened");
                 this.cell = $(".cell");
-
+                this.restart = $("#restart-game")
+                this.isFirst = true;
             }
 
             init() {
@@ -38,25 +40,32 @@
                 this.cell.on("click", function () {
                     self.updateCell(this);
                 });
+
+                this.restart.on("click", function () {
+                    window.location.reload(true);
+                });
             }
 
             renewBoard(impactedCellList, mineValues) {
                 for (var i = 0; i < impactedCellList.length; i++) {
                     let id = "#" + impactedCellList[i];
-                    if (mineValues[i] != "0")
-                        $(id).text(mineValues[i]);
+                    $(id).text(mineValues[i]);
                     $(id)[0].disabled = true;
-                    $(id).removeClass("unopen btn-outline-primary");
-                    $(id).addClass("opened btn-secondary");
+                    $(id).removeClass("btn-outline-primary");
+                    $(id).addClass("btn-secondary");
                 }
             }
 
-            makeAllButtonUnclickable() {
+            makeAllButtonUnclickable(selectedMines) {
                 for (var i = 0; i < this.cell.length; i++) {
                     this.cell[i].disabled = true;
                 }
-                this.cell.removeClass("btn-outline-primary btn-secondary");
-                this.cell.addClass("btn-danger");
+                for (var i = 0; i < selectedMines.length; i++) {
+                    let id = "#" + selectedMines.at(i);
+                    $(id).text("X");
+                    $(id).addClass("btn-danger");
+                    $(id).removeClass("btn-outline-primary btn-secondary");
+                }
             }
 
             updateCell(buttonPointer) {
@@ -65,22 +74,18 @@
                 $.ajax({
                     url: "@Url.Action("UpdateTable", "Home")",
                     type: "GET",
-                    data: { "data": $(buttonPointer).val() },
-                    beforeSend: function () {
-                        debugger;
-                    },
+                    data: { "data": $(buttonPointer).val(), "isFirst": self.isFirst},
                     success: function (data) {
                         let json = JSON.parse(data);
                         if (json.Status) {
-                            //TODO: End the game
-                            self.makeAllButtonUnclickable();
+                            self.makeAllButtonUnclickable(json.SelectedMines);
                         }
                         else {
                             self.renewBoard(json.ImpactedCells, json.CorrespondingMines);
                         }
                     },
                     complete: function () {
-
+                        self.isFirst = false;
                     },
                     error: function (e) {
 
